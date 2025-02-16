@@ -1,10 +1,12 @@
 #include "polyscope/polyscope.h"
 #include "polyscope/surface_mesh.h"
 
-#include "args/args.hxx"
+// #include "args/args.hxx"
 #include "imgui.h"
 
 #include "config.hpp"
+
+// test polyscope.
 
 // Some algorithm parameters
 float param1 = 42.0;
@@ -31,7 +33,7 @@ void myCallback() {
 int main() {
     double dt = 1e-2;
 
-    // A cube. test tet energy.
+    // A cube.
     MatrixXr vertices {{0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0},
                        {0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0}, 
                        {0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0}};

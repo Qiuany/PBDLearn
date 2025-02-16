@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
 
 project(PBDLearn_example)
+file(GLOB_RECURSE pbd_cpp_files "${CMAKE_CURRENT_SOURCE_DIR}/cpp/src/*.cpp")
 
 ### Configure output locations
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -11,17 +12,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 include_directories(external/eigen)
 add_subdirectory(external/polyscope)
 
+add_library(pbd SHARED ${pbd_cpp_files})
+target_include_directories(pbd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/cpp/include )
+
 # == Build our project stuff
 
-set(SRCS 
-  cpp/main.cpp
-	# add any other source files here
-)
+# test_polyscope
+add_executable(test_polyscope ${CMAKE_CURRENT_SOURCE_DIR}/cpp/test_polyscope.cpp)
+target_include_directories(test_polyscope PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cpp/include/")
+target_link_libraries(test_polyscope polyscope)
 
-
-# To change the name of your executable, change "gc_project" in the lines below to whatever you want
-add_executable(PBDLearn_example "${SRCS}")
-target_include_directories(PBDLearn_example PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cpp/include/")
-# add the args.hxx project which we use for command line args
-target_include_directories(PBDLearn_example PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/external/polyscope/deps/args")
-target_link_libraries(PBDLearn_example polyscope)
+# test_wind
+add_executable(test_wind ${CMAKE_CURRENT_SOURCE_DIR}/cpp/test_wind.cpp ${pbd_cpp_files})
+target_include_directories(test_wind PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cpp/include/")
+target_link_libraries(test_wind pbd polyscope)

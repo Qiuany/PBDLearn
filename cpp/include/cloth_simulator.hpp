@@ -4,6 +4,10 @@
 #include "config.hpp"
 #include "options.hpp"
 #include "SparseMatrixUtils.hpp"
+#include "collider.hpp"
+#include "plane.hpp"
+
+#include <memory> // std::shared_ptr
 
 struct DistanceConstraintInfo{
     double restLength;
@@ -48,6 +52,8 @@ class ClothSimulator
         std::map<int, double> stiffness_;
         std::vector<DistanceConstraintInfo> distance_constraints_;
         std::vector<BendingConstraintInfo> bending_constraints_;
+        std::vector<CollisionConstraintInfo> collision_constraints_;
+        std::vector<std::shared_ptr<Collider> > colliders_;
         
     public:
         ClothSimulator();
@@ -59,17 +65,22 @@ class ClothSimulator
         );
         void add_constraint(const int constraint_type, const double stiffness);
         void add_dirichlet(const int dof_index, const int dim_index, const double value);
+        void add_plane(const Vector3r& normal, const Vector3r& point, double thickness, double restitution);
         void set_force(const Vector3r& a) { a_ = a; }
-        void set_force(const Eigen::Matrix<double, 3, Eigen::Dynamic>& force) {force_ = force;}
+        void set_wind_force(const Eigen::Matrix<double, 3, Eigen::Dynamic>& force) {force_ = force;}
+        void set_wind_force(const Vector3r& force) {force_ = force * VectorXr::Ones(vNum).transpose();}
         void init();
         void build_mass_normal();
         void build_topology();
         void forward(const double _dt, const Options& opt);
         void compute_normal();
         double compute_stiffness(const int constraint_type, const int solver_iteration);
-        void project_distance_constraint(const double _dt, const int solver_iteration);
-        void project_bending_constraint(const double _dt, const int solver_iteration);
+        void collision_detection();
+        void project_distance_constraint(const int solver_iteration);
+        void project_bending_constraint(const int solver_iteration);
+        void project_collision_constraint(const int solver_iteration);
         void project_dirichlet();
+        void update_position_velocity(const double _dt);
 };
 
 const double compute_dihedral_angle(const Vector3r& p0, const Vector3r& p1, const Vector3r& p2, const Vector3r& p3);

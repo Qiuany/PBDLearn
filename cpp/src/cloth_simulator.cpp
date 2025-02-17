@@ -35,6 +35,10 @@ void ClothSimulator::add_dirichlet(const int dof_index, const int dim_index, con
     dirichlet_.push_back(item);
 }
 
+void ClothSimulator::add_plane(const Vector3r& normal, const Vector3r& point, double thickness, double restitution) {
+    colliders_.push_back(std::make_shared<Plane>(normal, point, thickness, restitution));
+}
+
 void ClothSimulator::init()
 {
     next_position_ = Eigen::Matrix<double, 3, Eigen::Dynamic>::Zero(3, vNum);
@@ -142,16 +146,20 @@ void ClothSimulator::forward(const double _dt, const Options& opt) {
     }
     next_position_ = position_ + h * next_velocity_;
 
+    // Collision detection.
+    collision_detection();
+
     // Project constraints.
     for (int i = 0; i < solver_iteration; ++i) {
-        project_distance_constraint(h, solver_iteration);
-        project_bending_constraint(h, solver_iteration);
+        project_distance_constraint(solver_iteration);
+        project_bending_constraint(solver_iteration);
+        project_collision_constraint(solver_iteration);
         project_dirichlet();
     }
 
     // Update.
-    velocity_ = (next_position_ - position_) / h;
-    position_ = next_position_;
+    update_position_velocity(h);
+    collision_constraints_.clear();
 }
 
 void ClothSimulator::compute_normal() {
@@ -182,8 +190,7 @@ double ClothSimulator::compute_stiffness(const int constraint_type, const int so
     return 1.0 - std::pow(1.0 - stiffness_[constraint_type], power);
 }
 
-void ClothSimulator::project_distance_constraint(const double _dt, const int solver_iteration) {
-    double h = _dt;
+void ClothSimulator::project_distance_constraint(const int solver_iteration) {
     double stiffness = compute_stiffness(0, solver_iteration);
     for (int j = 0; j < distance_constraints_.size(); ++j) {
         DistanceConstraintInfo& info = distance_constraints_[j];
@@ -202,8 +209,7 @@ void ClothSimulator::project_distance_constraint(const double _dt, const int sol
     }
 }
 
-void ClothSimulator::project_bending_constraint(const double _dt, const int solver_iteration) {
-    double h = _dt;
+void ClothSimulator::project_bending_constraint(const int solver_iteration) {
     double stiffness = compute_stiffness(1, solver_iteration);
     for (int j = 0; j < bending_constraints_.size(); ++j) {
         BendingConstraintInfo& info = bending_constraints_[j];
@@ -261,4 +267,43 @@ const double compute_dihedral_angle(const Vector3r& p0, const Vector3r& p1, cons
     n2.normalize();
     double cos_theta = n1.dot(n2);
     return acos(cos_theta);
+}
+
+void ClothSimulator::collision_detection() {
+    for (int i = 0; i < vNum; ++i) {
+        Vector3r p = position_.col(i);
+        Vector3r p_next = next_position_.col(i);
+        Vector3r v = velocity_.col(i);
+        for (int j = 0; j < colliders_.size(); ++j) {
+            CollisionConstraintInfo info;
+            if (colliders_[j]->interset(p, p_next, v, info)) {
+                info.vIndex = i;
+                collision_constraints_.push_back(info);
+            }
+        }
+    }
+}
+
+void ClothSimulator::project_collision_constraint(const int solver_iteration) {
+    double stiffness = compute_stiffness(2, solver_iteration);
+    for (int j = 0; j < collision_constraints_.size(); ++j) {
+        CollisionConstraintInfo& info = collision_constraints_[j];
+        Vector3r p = next_position_.col(info.vIndex);
+        double diff = (p - info.concatPosition).dot(info.normal) - info.thickness;
+        if (diff < 0.0) {
+            Vector3r correction = stiffness * diff * info.normal;
+            next_position_.col(info.vIndex) -= correction;
+        }
+    }
+}
+
+void ClothSimulator::update_position_velocity(const double _dt) {
+    double h = _dt;
+    velocity_ = (next_position_ - position_) / h;
+    position_ = next_position_;
+    for (int i = 0; i < collision_constraints_.size(); ++i) {
+        CollisionConstraintInfo& info = collision_constraints_[i];
+        Vector3r new_v = info.velocity;
+        velocity_.col(info.vIndex) = new_v;
+    }
 }

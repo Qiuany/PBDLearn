@@ -16,7 +16,8 @@ class Collider{
         bool fixed_;
         double restitution_;
         virtual ~Collider() = default;
-        virtual bool interset(const Vector3r& p, const Vector3r& p_next, const Vector3r& v, CollisionConstraintInfo& info) const = 0;
+        virtual bool interset(const Vector3r& p, const Vector3r& p_next, const Vector3r& v, 
+                              CollisionConstraintInfo& info) = 0;
 };
 
 

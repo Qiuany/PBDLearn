@@ -21,7 +21,8 @@ class Plane : public Collider{
         }
 
         ~Plane() {};
-        bool interset(const Vector3r& p, const Vector3r& p_next, const Vector3r& v, CollisionConstraintInfo& info) const override {
+        bool interset(const Vector3r& p, const Vector3r& p_next, const Vector3r& v,
+                      CollisionConstraintInfo& info) override {
             double dist = normal_.dot(p_next - point_);
             if (dist < thickness_) {
                 info.thickness = thickness_;

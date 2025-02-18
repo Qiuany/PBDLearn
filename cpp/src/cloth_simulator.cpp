@@ -39,6 +39,10 @@ void ClothSimulator::add_plane(const Vector3r& normal, const Vector3r& point, do
     colliders_.push_back(std::make_shared<Plane>(normal, point, thickness, restitution));
 }
 
+void ClothSimulator::add_sphere(const Vector3r& point, double radius, double thickness, double restitution) {
+    colliders_.push_back(std::make_shared<Sphere>(point, radius, thickness, restitution));
+}
+
 void ClothSimulator::init()
 {
     next_position_ = Eigen::Matrix<double, 3, Eigen::Dynamic>::Zero(3, vNum);
@@ -274,6 +278,7 @@ void ClothSimulator::collision_detection() {
         Vector3r p = position_.col(i);
         Vector3r p_next = next_position_.col(i);
         Vector3r v = velocity_.col(i);
+        double m = mass_vec_[i];
         for (int j = 0; j < colliders_.size(); ++j) {
             CollisionConstraintInfo info;
             if (colliders_[j]->interset(p, p_next, v, info)) {
@@ -306,4 +311,11 @@ void ClothSimulator::update_position_velocity(const double _dt) {
         Vector3r new_v = info.velocity;
         velocity_.col(info.vIndex) = new_v;
     }
+}
+
+void ClothSimulator::reset() {
+    position_ = rest_position_ + 0.02 * Eigen::Matrix<double, 3, Eigen::Dynamic>::Random(3, vNum);
+    velocity_ = Eigen::Matrix<double, 3, Eigen::Dynamic>::Zero(3, vNum);
+    next_position_ = Eigen::Matrix<double, 3, Eigen::Dynamic>::Zero(3, vNum);
+    next_velocity_ = Eigen::Matrix<double, 3, Eigen::Dynamic>::Zero(3, vNum);
 }

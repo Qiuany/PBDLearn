@@ -26,3 +26,8 @@ target_link_libraries(test_polyscope polyscope)
 add_executable(test_wind ${CMAKE_CURRENT_SOURCE_DIR}/cpp/test_wind.cpp ${pbd_cpp_files})
 target_include_directories(test_wind PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cpp/include/")
 target_link_libraries(test_wind pbd polyscope)
+
+# test_sphere
+add_executable(test_sphere ${CMAKE_CURRENT_SOURCE_DIR}/cpp/test_sphere.cpp ${pbd_cpp_files})
+target_include_directories(test_sphere PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/cpp/include/")
+target_link_libraries(test_sphere pbd polyscope)

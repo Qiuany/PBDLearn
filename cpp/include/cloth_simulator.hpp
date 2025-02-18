@@ -6,6 +6,7 @@
 #include "SparseMatrixUtils.hpp"
 #include "collider.hpp"
 #include "plane.hpp"
+#include "sphere.hpp"
 
 #include <memory> // std::shared_ptr
 
@@ -66,6 +67,7 @@ class ClothSimulator
         void add_constraint(const int constraint_type, const double stiffness);
         void add_dirichlet(const int dof_index, const int dim_index, const double value);
         void add_plane(const Vector3r& normal, const Vector3r& point, double thickness, double restitution);
+        void add_sphere(const Vector3r& point, double radius, double thickness, double restitution);
         void set_force(const Vector3r& a) { a_ = a; }
         void set_wind_force(const Eigen::Matrix<double, 3, Eigen::Dynamic>& force) {force_ = force;}
         void set_wind_force(const Vector3r& force) {force_ = force * VectorXr::Ones(vNum).transpose();}
@@ -81,6 +83,7 @@ class ClothSimulator
         void project_collision_constraint(const int solver_iteration);
         void project_dirichlet();
         void update_position_velocity(const double _dt);
+        void reset();
 };
 
 const double compute_dihedral_angle(const Vector3r& p0, const Vector3r& p1, const Vector3r& p2, const Vector3r& p3);
